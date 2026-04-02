@@ -32,7 +32,7 @@ async function callRAG(question) {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ question }),
-      signal:  AbortSignal.timeout(30_000),
+      signal:  AbortSignal.timeout(90_000),
     })
     if (!res.ok) throw new Error('RAG ' + res.status)
     return res.json()
