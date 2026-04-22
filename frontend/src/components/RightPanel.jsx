@@ -115,9 +115,8 @@ export default function RightPanel({ stats }) {
             }}>
               ⏳ กำลังพัฒนา
             </div>
-            <div>Qwen2-1.5B + ChromaDB<br />
+            <div>Qwen2.5:7b + ChromaDB<br />
               เชื่อมต่อ RAG backend<br />
-              ใน .env → RAG_API_URL
             </div>
           </div>
         </Card>

@@ -198,7 +198,7 @@ def generate_answer(question: str, context_docs: list, temperature: float = 0.3)
     try:
         # ยิง Request ไปที่ Ollama API บนเครื่อง Local
         response = requests.post('http://localhost:11434/api/generate', json={
-            "model": "qwen2",
+            "model": "qwen2.5:7b",
             "system": SYSTEM_PROMPT,
             "prompt": prompt,
             "stream": False,
