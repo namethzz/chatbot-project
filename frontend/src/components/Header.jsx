@@ -4,63 +4,79 @@ import { Icon } from './Icons.jsx'
 export default function Header({ backendOk, docsCount = 736 }) {
   return (
     <header style={{
-      position: 'relative', zIndex: 20,
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '12px 28px',
-      borderBottom: '1px solid rgba(74,44,26,.12)',
-      background: 'rgba(245,239,224,.9)',
+      position: 'relative',
+      zIndex: 20,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '16px 28px',
+      borderBottom: '1px solid rgba(74,44,26,.10)',
+      background: 'rgba(245,239,224,.92)',
       backdropFilter: 'blur(14px)',
       WebkitBackdropFilter: 'blur(14px)',
       flexShrink: 0,
     }}>
-      {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{
-          width: 40, height: 40, borderRadius: 12,
-          background: 'var(--leaf)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 4px 12px rgba(59,107,53,.3)',
+          width: 48,
+          height: 48,
+          borderRadius: 16,
+          background: 'linear-gradient(135deg, var(--leaf), var(--sprout))',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 10px 28px rgba(59,107,53,.24)',
         }}>
-          <Icon name="leaf" size={22} color="#fff" />
+          <Icon name="sprout" size={24} color="#fff" />
         </div>
+
         <div>
           <div style={{
             fontFamily: "'Libre Baskerville', serif",
-            fontSize: 15, fontWeight: 700, color: 'var(--soil)', lineHeight: 1.1,
+            fontSize: 20,
+            fontWeight: 700,
+            color: 'var(--soil)',
+            lineHeight: 1.15,
           }}>
             ที่ปรึกษาเกษตรกร
           </div>
           <div style={{
-            fontSize: 10.5, color: 'var(--muted)',
-            letterSpacing: '.07em', textTransform: 'uppercase', marginTop: 2,
+            fontSize: 12.5,
+            color: 'var(--muted)',
+            marginTop: 3,
+            letterSpacing: '.04em',
           }}>
-            พืชเศรษฐกิจไทย · RAG AI
+            พืชเศรษฐกิจไทย · ระบบผู้ช่วยตอบคำถามเกษตร
           </div>
         </div>
       </div>
 
-      {/* Status chips */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        {/* Backend status */}
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
         <Chip
-          icon={
-            backendOk === null ? '⏳' :
-            backendOk ? <StatusDot active /> : null
+          leftNode={
+            backendOk === null
+              ? <Icon name="sparkles" size={14} color="var(--gold)" />
+              : backendOk
+              ? <StatusDot active />
+              : <Icon name="wifiOff" size={14} color="var(--red)" />
           }
           label={
-            backendOk === null ? 'กำลังตรวจสอบ' :
-            backendOk ? 'เชื่อมต่อแล้ว' : 'Backend ออฟไลน์'
+            backendOk === null
+              ? 'กำลังตรวจสอบระบบ'
+              : backendOk
+              ? 'เชื่อมต่อแล้ว'
+              : 'Backend ออฟไลน์'
           }
-          accent={backendOk === false ? 'rgba(155,43,26,.15)' : 'rgba(59,107,53,.1)'}
-          border={backendOk === false ? 'rgba(155,43,26,.3)' : 'rgba(59,107,53,.28)'}
+          accent={backendOk === false ? 'rgba(155,43,26,.10)' : 'rgba(59,107,53,.08)'}
+          border={backendOk === false ? 'rgba(155,43,26,.24)' : 'rgba(59,107,53,.22)'}
           color={backendOk === false ? 'var(--red)' : 'var(--leaf)'}
-          leftNode={backendOk === false ? <Icon name="wifiOff" size={12} color="var(--red)" /> : undefined}
         />
-        {/* Docs chip */}
+
         <Chip
-          label={`📊 14 พืช · ${docsCount} docs`}
-          accent="rgba(201,132,30,.09)"
-          border="rgba(201,132,30,.28)"
+          leftNode={<Icon name="chart" size={14} color="var(--gold)" />}
+          label={`14 พืช · ${docsCount} เอกสาร`}
+          accent="rgba(201,132,30,.08)"
+          border="rgba(201,132,30,.22)"
           color="var(--gold)"
         />
       </div>
@@ -71,7 +87,9 @@ export default function Header({ backendOk, docsCount = 736 }) {
 function StatusDot({ active }) {
   return (
     <div style={{
-      width: 7, height: 7, borderRadius: '50%',
+      width: 8,
+      height: 8,
+      borderRadius: '50%',
       background: active ? 'var(--sprout)' : 'var(--red)',
       animation: active ? 'pulse 2s ease-in-out infinite' : 'none',
       flexShrink: 0,
@@ -79,17 +97,21 @@ function StatusDot({ active }) {
   )
 }
 
-function Chip({ label, icon, leftNode, accent, border, color }) {
+function Chip({ label, leftNode, accent, border, color }) {
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 5,
-      padding: '5px 11px', borderRadius: 20,
-      fontSize: 11.5, fontWeight: 500,
-      background: accent, border: `1px solid ${border}`, color,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 7,
+      padding: '8px 13px',
+      borderRadius: 999,
+      fontSize: 13,
+      fontWeight: 600,
+      background: accent,
+      border: `1px solid ${border}`,
+      color,
     }}>
       {leftNode}
-      {icon && typeof icon !== 'string' ? icon : null}
-      {typeof icon === 'string' ? <span>{icon}</span> : null}
       {label}
     </div>
   )

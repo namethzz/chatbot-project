@@ -6,7 +6,6 @@ import CropFilterBar from './components/CropFilterBar.jsx'
 import Sidebar       from './components/Sidebar.jsx'
 import ChatArea      from './components/ChatArea.jsx'
 import InputBar      from './components/InputBar.jsx'
-import RightPanel    from './components/RightPanel.jsx'
 import Toast         from './components/Toast.jsx'
 
 export default function App() {
@@ -21,30 +20,29 @@ export default function App() {
 
   function handleCropFilter(key) {
     setActiveCrop(key)
-    // InputBar picks up cropFilter prop and pre-fills the textarea
   }
 
   return (
     <div style={{
-      display: 'flex', flexDirection: 'column',
-      height: '100vh', overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      overflow: 'hidden',
       position: 'relative',
     }}>
-      {/* ── Background layers ── */}
       <Background />
 
-      {/* ── Header ── */}
       <Header backendOk={backendOk} />
 
-      {/* ── Crop filter bar ── */}
       <CropFilterBar active={activeCrop} onSelect={handleCropFilter} />
 
-      {/* ── Main 3-column layout ── */}
       <div style={{
-        display: 'flex', flex: 1, overflow: 'hidden',
-        position: 'relative', zIndex: 5,
+        display: 'flex',
+        flex: 1,
+        overflow: 'hidden',
+        position: 'relative',
+        zIndex: 5,
       }}>
-        {/* Left: Session sidebar */}
         <Sidebar
           sessions={sessions}
           currentId={currentId}
@@ -55,10 +53,12 @@ export default function App() {
           stats={stats}
         />
 
-        {/* Center: Chat */}
         <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column',
-          overflow: 'hidden', minWidth: 0,
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          minWidth: 0,
         }}>
           <ChatArea
             messages={messages}
@@ -66,18 +66,15 @@ export default function App() {
             bottomRef={bottomRef}
             onQuick={send}
           />
+
           <InputBar
             onSend={send}
             loading={loading}
             cropFilter={activeCrop !== 'all' ? activeCrop : null}
           />
         </div>
-
-        {/* Right: Stats panel */}
-        <RightPanel stats={stats} />
       </div>
 
-      {/* ── Toast / error ── */}
       {error && (
         <Toast message={error} onClose={() => setError(null)} />
       )}
@@ -85,15 +82,17 @@ export default function App() {
   )
 }
 
-/* Radial gradient background — keeps z-index below everything */
 function Background() {
   return (
     <div style={{
-      position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
+      position: 'fixed',
+      inset: 0,
+      pointerEvents: 'none',
+      zIndex: 0,
       background: `
-        radial-gradient(ellipse 80% 60% at 8% 100%, rgba(59,107,53,.11), transparent 58%),
-        radial-gradient(ellipse 55% 40% at 92% 0%,  rgba(184,212,232,.18), transparent 50%),
-        radial-gradient(ellipse 45% 35% at 50% 50%, rgba(232,213,163,.25), transparent 68%)
+        radial-gradient(ellipse 80% 60% at 8% 100%, rgba(59,107,53,.10), transparent 58%),
+        radial-gradient(ellipse 55% 40% at 92% 0%, rgba(184,212,232,.16), transparent 50%),
+        radial-gradient(ellipse 45% 35% at 50% 50%, rgba(232,213,163,.20), transparent 68%)
       `,
     }} />
   )

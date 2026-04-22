@@ -4,17 +4,26 @@ import { CROPS } from '../utils/constants.js'
 export default function CropFilterBar({ active, onSelect }) {
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 8,
-      padding: '9px 28px', overflowX: 'auto', flexShrink: 0,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      padding: '12px 28px',
+      overflowX: 'auto',
+      flexShrink: 0,
       borderBottom: '1px solid rgba(74,44,26,.08)',
-      background: 'rgba(245,239,224,.6)',
+      background: 'rgba(245,239,224,.72)',
       scrollbarWidth: 'none',
-      position: 'relative', zIndex: 10,
+      position: 'relative',
+      zIndex: 10,
     }}>
       <span style={{
-        fontSize: 10.5, color: 'var(--hint)', whiteSpace: 'nowrap',
-        fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase',
-        flexShrink: 0, marginRight: 4,
+        fontSize: 12,
+        color: 'var(--hint)',
+        whiteSpace: 'nowrap',
+        fontWeight: 700,
+        letterSpacing: '.05em',
+        flexShrink: 0,
+        marginRight: 2,
       }}>
         พืช :
       </span>
@@ -26,34 +35,27 @@ export default function CropFilterBar({ active, onSelect }) {
             key={c.key}
             onClick={() => onSelect(c.key)}
             style={{
-              display: 'flex', alignItems: 'center', gap: 5,
-              padding: '5px 12px', borderRadius: 20,
-              fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap',
-              flexShrink: 0, cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 7,
+              padding: '8px 14px',
+              borderRadius: 999,
+              fontSize: 14,
+              fontWeight: 600,
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              cursor: 'pointer',
               transition: 'all .18s ease',
               border: isActive
                 ? '1.5px solid var(--leaf)'
-                : '1.5px solid rgba(74,44,26,.15)',
-              background: isActive ? 'var(--leaf)' : 'rgba(255,255,255,.72)',
+                : '1.5px solid rgba(74,44,26,.12)',
+              background: isActive ? 'var(--leaf)' : 'rgba(255,255,255,.74)',
               color: isActive ? '#fff' : 'var(--muted)',
               outline: 'none',
-            }}
-            onMouseEnter={e => {
-              if (!isActive) {
-                e.currentTarget.style.borderColor = 'var(--sprout)'
-                e.currentTarget.style.color = 'var(--leaf)'
-                e.currentTarget.style.background = 'rgba(59,107,53,.07)'
-              }
-            }}
-            onMouseLeave={e => {
-              if (!isActive) {
-                e.currentTarget.style.borderColor = 'rgba(74,44,26,.15)'
-                e.currentTarget.style.color = 'var(--muted)'
-                e.currentTarget.style.background = 'rgba(255,255,255,.72)'
-              }
+              boxShadow: isActive ? '0 6px 16px rgba(59,107,53,.16)' : 'none',
             }}
           >
-            <span style={{ fontSize: 13 }}>{c.emoji}</span>
+            <span style={{ fontSize: 15 }}>{c.emoji}</span>
             {c.label}
           </button>
         )
