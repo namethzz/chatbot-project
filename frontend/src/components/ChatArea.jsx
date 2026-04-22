@@ -7,16 +7,16 @@ export default function ChatArea({ messages, loading, bottomRef, onQuick }) {
 
   return (
     <div style={{
-      flex: 1, overflowY: 'auto',
-      padding: hasMessages ? '28px 40px' : '0',
-      display: 'flex', flexDirection: 'column',
-      gap: 20,
+      flex: 1,
+      overflowY: 'auto',
+      padding: hasMessages ? '34px 56px' : '0',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 24,
       scrollbarWidth: 'thin',
       scrollbarColor: 'rgba(74,44,26,.15) transparent',
     }}>
-      {!hasMessages && (
-        <WelcomeScreen onQuick={onQuick} />
-      )}
+      {!hasMessages && <WelcomeScreen onQuick={onQuick} />}
 
       {messages.map((msg, i) => (
         <MessageBubble

@@ -3,7 +3,6 @@ import { Icon } from "./Icons.jsx";
 import Markdown from "react-markdown";
 import { INTENT, SOURCE } from "../utils/constants.js";
 
-// ─── Typing indicator ─────────────────────────────────────
 export function TypingBubble() {
   return (
     <div
@@ -40,7 +39,6 @@ export function TypingBubble() {
   );
 }
 
-// ─── Main MessageBubble ───────────────────────────────────
 export default function MessageBubble({ msg, isLatest }) {
   if (msg.role === "user") return <UserBubble msg={msg} isLatest={isLatest} />;
   return <BotBubble msg={msg} isLatest={isLatest} />;
@@ -106,6 +104,7 @@ function BotMeta({ intent, latencyMs }) {
       >
         ที่ปรึกษาเกษตร
       </span>
+
       {cfg && (
         <span
           style={{
@@ -124,6 +123,7 @@ function BotMeta({ intent, latencyMs }) {
           {cfg.label}
         </span>
       )}
+
       {latencyMs > 0 && (
         <span
           style={{ fontSize: 10, color: "var(--hint)", marginLeft: "auto" }}
@@ -178,7 +178,6 @@ function BotBubble({ msg, isLatest }) {
           </div>
         )}
 
-        {/* Content */}
         <div>
           {lines.map((line, i) => {
             const isBullet = /^[•\-\*]/.test(line);
@@ -208,7 +207,6 @@ function BotBubble({ msg, isLatest }) {
           })}
         </div>
 
-        {/* Sources */}
         {msg.sources?.length > 0 && (
           <div
             style={{
@@ -243,6 +241,7 @@ function BotBubble({ msg, isLatest }) {
                 </span>
               );
             })}
+
             {msg.docsUsed > 0 && (
               <span
                 style={{

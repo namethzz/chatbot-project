@@ -47,10 +47,8 @@ export default function App() {
       {/* ── Background layers ── */}
       <Background />
 
-      {/* ── Header ── */}
       <Header backendOk={backendOk} />
 
-      {/* ── Crop filter bar ── */}
       <CropFilterBar active={activeCrop} onSelect={handleCropFilter} />
 
       {/* ── Main 3-column layout ── */}
@@ -96,9 +94,6 @@ export default function App() {
             cropFilter={activeCrop !== "all" ? activeCrop : null}
           />
         </div>
-
-        {/* Right: Stats panel */}
-        <RightPanel stats={stats} />
       </div>
 
       {/* ── Toast / error ── */}
@@ -107,7 +102,6 @@ export default function App() {
   );
 }
 
-/* Radial gradient background — keeps z-index below everything */
 function Background() {
   return (
     <div
