@@ -44,6 +44,14 @@ export default function MessageBubble({ msg, isLatest }) {
   return <BotBubble msg={msg} isLatest={isLatest} />;
 }
 
+function cleanMarkdown(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/^\s*[\*\-]\s+/gm, '')
+    .replace(/\*/g, '')
+}
+
 function UserBubble({ msg, isLatest }) {
   return (
     <div
