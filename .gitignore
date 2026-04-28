@@ -1,0 +1,11 @@
+node_modules/
+.vite/
+dist/
+.env
+
+RAG/chroma_db/
+*.sqlite3
+*.bin
+
+RAG/chroma_db/
+cloudflared.exe
