@@ -6,3 +6,6 @@ dist/
 RAG/chroma_db/
 *.sqlite3
 *.bin
+
+RAG/chroma_db/
+cloudflared.exe
