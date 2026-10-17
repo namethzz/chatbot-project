@@ -32,7 +32,7 @@ export default function RightPanel({ stats }) {
                 <span style={{ fontSize: 11, color: 'var(--muted)' }}>{row.label}</span>
                 <span style={{
                   fontSize: 13, fontWeight: 700, color: 'var(--soil)',
-                  fontFamily: "'Libre Baskerville', 'Sarabun', serif",
+                  fontFamily: "'Libre Baskerville', 'Noto Serif Thai', serif",
                 }}>
                   {row.val}
                 </span>
@@ -172,7 +172,7 @@ function StatMini({ label, val, color }) {
     }}>
       <div style={{
         fontSize: 20, fontWeight: 700, color,
-        fontFamily: "'Libre Baskerville', 'Sarabun', serif",
+        fontFamily: "'Libre Baskerville', 'Noto Serif Thai', serif",
         lineHeight: 1.1,
       }}>
         {val}

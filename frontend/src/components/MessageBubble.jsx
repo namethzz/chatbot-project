@@ -100,7 +100,7 @@ function BotMeta({ intent, latencyMs }) {
           flexShrink: 0,
         }}
       >
-        <Icon name="leaf" size={15} color="#fff" />
+        <Icon name="sprout" size={15} color="#fff" />
       </div>
       <span
         style={{

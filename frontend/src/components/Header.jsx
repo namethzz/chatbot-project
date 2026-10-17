@@ -2,7 +2,7 @@ import React from 'react'
 import { Icon } from './Icons.jsx'
 import { isDemo } from '../utils/api.js'
 
-export default function Header({ backendOk, docsCount = 46340 }) {
+export default function Header({ backendOk, onHome, docsCount = 46340 }) {
   return (
     <header style={{
       position: 'relative',
@@ -17,7 +17,12 @@ export default function Header({ backendOk, docsCount = 46340 }) {
       WebkitBackdropFilter: 'blur(14px)',
       flexShrink: 0,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+      <button
+        type="button"
+        onClick={onHome}
+        title="กลับหน้าแรก"
+        style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'none', border: 0, padding: 0, textAlign: 'left', color: 'inherit' }}
+      >
         <div style={{
           width: 48,
           height: 48,
@@ -33,7 +38,7 @@ export default function Header({ backendOk, docsCount = 46340 }) {
 
         <div>
           <div style={{
-            fontFamily: "'Libre Baskerville', 'Sarabun', serif",
+            fontFamily: "'Libre Baskerville', 'Noto Serif Thai', serif",
             fontSize: 20,
             fontWeight: 700,
             color: 'var(--soil)',
@@ -50,7 +55,7 @@ export default function Header({ backendOk, docsCount = 46340 }) {
             พืชเศรษฐกิจไทย · ระบบผู้ช่วยตอบคำถามเกษตร
           </div>
         </div>
-      </div>
+      </button>
 
       <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
         <Chip

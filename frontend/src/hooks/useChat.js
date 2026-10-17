@@ -86,9 +86,11 @@ export function useChat() {
     }
   }
 
-  const send = useCallback(async (question) => {
+  // fresh: true = เริ่มบทสนทนาใหม่ (เช่น ถามจากหน้าแรก) ไม่ต่อ session ที่เปิดค้างไว้
+  const send = useCallback(async (question, { fresh = false } = {}) => {
     const q = question.trim()
     if (!q || loading) return
+    const sessionId = fresh ? null : currentId
 
     setLoading(true)
     setError(null)
@@ -98,7 +100,7 @@ export function useChat() {
     setMessages(prev => [...prev, { _id: tempId, role: 'user', content: q }])
 
     try {
-      const data = await api.sendMessage(q, currentId)
+      const data = await api.sendMessage(q, sessionId)
 
       // Replace optimistic + add bot reply
       setMessages(prev => [
@@ -108,7 +110,7 @@ export function useChat() {
       ])
 
       // Update session id if new
-      if (!currentId && data.sessionId) setCurrentId(data.sessionId)
+      if (!sessionId && data.sessionId) setCurrentId(data.sessionId)
 
       // Refresh lists
       loadSessions()
