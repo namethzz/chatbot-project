@@ -8,6 +8,7 @@ import ChatArea from "./components/ChatArea.jsx";
 import InputBar from "./components/InputBar.jsx";
 import RightPanel from "./components/RightPanel.jsx";
 import Toast from "./components/Toast.jsx";
+import Landing from "./components/Landing.tsx";
 
 export default function App() {
   const {
@@ -28,6 +29,22 @@ export default function App() {
   } = useChat();
 
   const [activeCrop, setActiveCrop] = useState("all");
+  const [view, setView] = useState("landing"); // "landing" | "chat"
+
+  function startChat(question) {
+    newSession();
+    setView("chat");
+    if (question) send(question, { fresh: true });
+  }
+
+  if (view === "landing") {
+    return (
+      <>
+        <Landing onStart={startChat} />
+        {error && <Toast message={error} onClose={() => setError(null)} />}
+      </>
+    );
+  }
 
   function handleCropFilter(key) {
     setActiveCrop(key);
@@ -47,7 +64,7 @@ export default function App() {
       {/* ── Background layers ── */}
       <Background />
 
-      <Header backendOk={backendOk} />
+      <Header backendOk={backendOk} onHome={() => setView("landing")} />
 
       <CropFilterBar active={activeCrop} onSelect={handleCropFilter} />
 

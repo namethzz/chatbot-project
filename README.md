@@ -2,7 +2,7 @@
 
 แชทบอทภาษาไทยที่ตอบคำถามเรื่องการปลูกพืชเศรษฐกิจไทย 14 ชนิด โดยค้นจากข้อมูลจริงของหน่วยงานรัฐก่อนแล้วจึงให้ AI เรียบเรียงคำตอบ (RAG — Retrieval-Augmented Generation)
 
-**🔗 Live demo:** _chatbot-project-phi-nine.vercel.app_
+**🔗 Live demo:** [_chatbot-project-phi-nine.vercel.app_](https://chatbot-project-phi-nine.vercel.app)
 
 ![หน้าแรก](docs/screenshot-welcome.png)
 ![ตัวอย่างการสนทนา](docs/screenshot-chat.png)
@@ -41,7 +41,7 @@
 
 | ส่วน | เทคโนโลยี |
 |---|---|
-| Frontend | React 18, Vite, react-markdown |
+| Frontend | React 18, Vite, Tailwind CSS v4, TypeScript (บางส่วน), lucide-react, react-markdown |
 | Backend | Node.js, Express, MongoDB (Mongoose) |
 | RAG API | Python, FastAPI, ChromaDB, sentence-transformers (bge-m3) |
 | LLM | Typhoon API (หรือ LLM อื่นที่ใช้ API แบบเดียวกับ OpenAI เช่น Ollama) |
@@ -56,7 +56,7 @@
 | `RAG/rag_prototype.py` | API `/ask`: กรองหัวข้อ → แยกเจตนา → ค้นข้อมูล → ให้ LLM ตอบ |
 | `RAG/constants.py` | รายชื่อพืช/จังหวัด และตัวช่วย normalize ภาษาไทย |
 | `backend/` | API เก็บประวัติแชทและสถิติ และส่งคำถามต่อให้ RAG |
-| `frontend/` | หน้าเว็บแชท (มีโหมดเดโมในตัว ดู `src/utils/demoApi.js`) |
+| `frontend/` | หน้าแรก (`src/components/Landing.tsx` + `src/components/ui/hero-1.tsx`) และหน้าแชท (มีโหมดเดโมในตัว ดู `src/utils/demoApi.js`) |
 
 ---
 
