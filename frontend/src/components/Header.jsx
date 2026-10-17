@@ -1,7 +1,8 @@
 import React from 'react'
 import { Icon } from './Icons.jsx'
+import { isDemo } from '../utils/api.js'
 
-export default function Header({ backendOk, docsCount = 736 }) {
+export default function Header({ backendOk, docsCount = 46340 }) {
   return (
     <header style={{
       position: 'relative',
@@ -63,6 +64,8 @@ export default function Header({ backendOk, docsCount = 736 }) {
           label={
             backendOk === null
               ? 'กำลังตรวจสอบระบบ'
+              : isDemo
+              ? 'โหมดเดโม'
               : backendOk
               ? 'เชื่อมต่อแล้ว'
               : 'Backend ออฟไลน์'
@@ -74,7 +77,7 @@ export default function Header({ backendOk, docsCount = 736 }) {
 
         <Chip
           leftNode={<Icon name="chart" size={14} color="var(--gold)" />}
-          label={`14 พืช · ${docsCount} เอกสาร`}
+          label={`14 พืช · ${docsCount.toLocaleString()} เอกสาร`}
           accent="rgba(201,132,30,.08)"
           border="rgba(201,132,30,.22)"
           color="var(--gold)"

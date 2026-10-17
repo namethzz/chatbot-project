@@ -1,3 +1,8 @@
+import * as demo from './demoApi.js'
+
+// โหมดเดโม: ใช้คำตอบตัวอย่างในเบราว์เซอร์ ไม่ต้องมี backend (ดู demoApi.js)
+export const isDemo = import.meta.env.VITE_DEMO_MODE === 'true'
+
 // ตอนพัฒนาในเครื่องใช้ proxy ของ Vite (/api → localhost:4000)
 // ตอน deploy ตั้ง VITE_API_URL เป็น URL ของ backend เช่น https://xxx.onrender.com
 const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') + '/api'
@@ -14,18 +19,25 @@ async function request(path, options = {}) {
   return res.json()
 }
 
-// ─── Sessions ─────────────────────────────────────────
-export const getSessions   = ()        => request('/sessions')
-export const createSession = ()        => request('/sessions', { method: 'POST' })
-export const getSession    = (id)      => request('/sessions/' + id)
-export const renameSession = (id, t)   => request('/sessions/' + id + '/title', { method: 'PATCH', body: JSON.stringify({ title: t }) })
-export const deleteSession = (id)      => request('/sessions/' + id, { method: 'DELETE' })
+const live = {
+  // ─── Sessions ─────────────────────────────────────────
+  getSessions:   ()        => request('/sessions'),
+  createSession: ()        => request('/sessions', { method: 'POST' }),
+  getSession:    (id)      => request('/sessions/' + id),
+  renameSession: (id, t)   => request('/sessions/' + id + '/title', { method: 'PATCH', body: JSON.stringify({ title: t }) }),
+  deleteSession: (id)      => request('/sessions/' + id, { method: 'DELETE' }),
 
-// ─── Chat ─────────────────────────────────────────────
-export const sendMessage   = (q, sid) => request('/ask', { method: 'POST', body: JSON.stringify({ question: q, sessionId: sid }) })
+  // ─── Chat ─────────────────────────────────────────────
+  sendMessage:   (q, sid)  => request('/ask', { method: 'POST', body: JSON.stringify({ question: q, sessionId: sid }) }),
 
-// ─── Stats ────────────────────────────────────────────
-export const getStats      = ()        => request('/stats')
+  // ─── Stats ────────────────────────────────────────────
+  getStats:      ()        => request('/stats'),
 
-// ─── Health ───────────────────────────────────────────
-export const healthCheck   = ()        => request('/health')
+  // ─── Health ───────────────────────────────────────────
+  healthCheck:   ()        => request('/health'),
+}
+
+export const {
+  getSessions, createSession, getSession, renameSession, deleteSession,
+  sendMessage, getStats, healthCheck,
+} = isDemo ? demo : live
