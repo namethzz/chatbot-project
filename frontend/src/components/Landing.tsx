@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Hero1 } from "@/components/ui/hero-1";
+import BrandMark from "@/components/BrandMark";
 import { QUICK_PROMPTS } from "@/utils/constants.js";
 import { isDemo } from "@/utils/api.js";
 
@@ -12,6 +13,7 @@ export default function Landing({ onStart }: LandingProps) {
   return (
     <Hero1
       brand="ที่ปรึกษาเกษตรกร"
+      logo={<BrandMark className="size-9" />}
       ctaLabel="เริ่มคุย"
       onCtaClick={() => onStart()}
       headline={

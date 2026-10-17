@@ -1,6 +1,7 @@
 import * as React from "react";
 import Markdown from "react-markdown";
-import { ArrowUpRight, Lightbulb, Sprout } from "lucide-react";
+import { ArrowUpRight, Lightbulb } from "lucide-react";
+import BrandMark from "@/components/BrandMark";
 import { cn } from "@/lib/utils";
 import { QUICK_PROMPTS } from "@/utils/constants.js";
 import { FallbackIcon, INTENT, KIND_ICON, SOURCE, type ChatMessage } from "./meta";
@@ -80,9 +81,7 @@ function UserMessage({ msg }: { msg: ChatMessage }) {
 
 function BotAvatar() {
   return (
-    <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-leaf">
-      <Sprout className="size-4 text-cream" strokeWidth={2.2} aria-hidden />
-    </span>
+    <BrandMark className="size-7" />
   );
 }
 

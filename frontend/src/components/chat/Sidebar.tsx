@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Check, MessageSquare, Pencil, Plus, Sprout, Trash2, X } from "lucide-react";
+import { Check, MessageSquare, Pencil, Plus, Trash2, X } from "lucide-react";
+import BrandMark from "@/components/BrandMark";
 import { cn } from "@/lib/utils";
 import type { SessionSummary } from "./meta";
 
@@ -45,9 +46,7 @@ export default function Sidebar({
             title="กลับหน้าแรก"
             className="flex cursor-pointer items-center gap-2.5 rounded-lg p-1 -m-1 focus-visible:outline-2 focus-visible:outline-lime"
           >
-            <span className="grid size-8 place-items-center rounded-lg bg-leaf">
-              <Sprout className="size-[18px] text-cream" strokeWidth={2.2} aria-hidden />
-            </span>
+            <BrandMark className="size-9" />
             <span className="font-display text-base font-semibold">ที่ปรึกษาเกษตรกร</span>
           </button>
           <button
