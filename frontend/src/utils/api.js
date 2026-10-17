@@ -1,4 +1,6 @@
-const BASE = '/api'
+// ตอนพัฒนาในเครื่องใช้ proxy ของ Vite (/api → localhost:4000)
+// ตอน deploy ตั้ง VITE_API_URL เป็น URL ของ backend เช่น https://xxx.onrender.com
+const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') + '/api'
 
 async function request(path, options = {}) {
   const res = await fetch(BASE + path, {

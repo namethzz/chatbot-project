@@ -1,0 +1,80 @@
+# Deploy RAG API ขึ้น Hugging Face Spaces ทุกครั้งที่ main เปลี่ยนในโฟลเดอร์ RAG/
+#
+# ต้องตั้งค่าใน GitHub repo → Settings → Secrets and variables → Actions:
+#   - Variables: HF_SPACE_ID  เช่น  your-hf-username/agri-rag
+#   - Secrets:   HF_TOKEN     (Hugging Face access token แบบ write)
+# ถ้ายังไม่ได้ตั้ง HF_SPACE_ID job จะถูกข้ามไป
+name: Deploy RAG to Hugging Face Spaces
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'RAG/**'
+      - '.github/workflows/deploy-rag.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-rag
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: vars.HF_SPACE_ID != ''
+    runs-on: ubuntu-latest
+    # embed ~46,000 เอกสารด้วย CPU ใช้เวลานาน (เฉพาะตอนข้อมูลเปลี่ยน)
+    timeout-minutes: 300
+    defaults:
+      run:
+        working-directory: RAG
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # สร้าง Vector DB ใหม่เฉพาะตอนข้อมูลหรือโค้ดที่ใช้สร้าง DB เปลี่ยน
+      - name: Restore vector DB cache
+        id: chroma-cache
+        uses: actions/cache@v4
+        with:
+          path: RAG/chroma_db
+          key: chroma-${{ hashFiles('RAG/data/cleaned/land_suit_rag_full.jsonl', 'RAG/data/cleaned/plant_growing_rag_ready.jsonl', 'RAG/data/cleaned/pest_rag.jsonl', 'RAG/constants.py', 'RAG/vector_db.py', 'RAG/requirements.txt') }}
+
+      - name: Build vector DB
+        if: steps.chroma-cache.outputs.cache-hit != 'true'
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements.txt
+          python build_db.py
+
+      - name: Upload to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_ID: ${{ vars.HF_SPACE_ID }}
+        run: |
+          pip install huggingface_hub
+          python - <<'PY'
+          import os
+          from huggingface_hub import HfApi
+
+          api = HfApi(token=os.environ['HF_TOKEN'])
+          space_id = os.environ['HF_SPACE_ID']
+          api.create_repo(space_id, repo_type='space', space_sdk='docker', exist_ok=True)
+          api.upload_folder(
+              folder_path='.',
+              repo_id=space_id,
+              repo_type='space',
+              allow_patterns=[
+                  '*.py', 'requirements.txt', 'Dockerfile', '.dockerignore', 'README.md',
+                  'chroma_db/**',
+                  'data/cleaned/land_suit_rag_full.jsonl',
+                  'data/cleaned/plant_growing_rag_ready.jsonl',
+                  'data/cleaned/pest_rag.jsonl',
+              ],
+              delete_patterns=['chroma_db/**'],  # ลบ index เก่าที่ไม่ใช้แล้ว
+              commit_message=f'Deploy {os.environ.get("GITHUB_SHA", "")[:7]}',
+          )
+          print(f'✅ Deployed → https://huggingface.co/spaces/{space_id}')
+          PY
