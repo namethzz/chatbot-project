@@ -2,27 +2,20 @@
 import os
 import json
 import pandas as pd
+from constants import CROP_NAMES, CROP_NAMES_LONGEST_FIRST, ALL_PROVINCES, normalize_thai
 
 # ---------------------------------------------------------
-# 1. กำหนดโฟลเดอร์ที่เก็บไฟล์ 
+# 1. กำหนดโฟลเดอร์ที่เก็บไฟล์ (อิงตำแหน่งของสคริปต์ รันจากที่ไหนก็ได้)
 # ---------------------------------------------------------
-output_dir = './data/cleaned/'
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+output_dir = os.path.join(SCRIPT_DIR, 'data', 'cleaned')
 os.makedirs(output_dir, exist_ok=True)
 
-if os.path.exists('./RawData'):
-    base_dir = './RawData'
-else:
-    base_dir = './'
+base_dir = os.path.join(SCRIPT_DIR, 'data', 'RawData')
 
 print(f"🔍 กำลังค้นหาไฟล์ CSV แบบเจาะลึกทุกโฟลเดอร์ย่อยใน: {os.path.abspath(base_dir)}")
 
 all_data = []
-
-KNOWN_CROPS = [
-    'ข้าวโพด', 'มันสำปะหลัง', 'อ้อย', 'สับปะรด', 'ยางพารา', 
-    'ทุเรียน', 'มังคุด', 'ลำไย', 'ปาล์มน้ำมัน', 'มะพร้าว', 
-    'กาแฟโรบัสต้า', 'กาแฟอาราบิก้า', 'กาแฟ', 'เงาะ', 'ข้าว'
-] 
 
 # 2. วนลูปหาไฟล์ .csv ทะลุทุกโฟลเดอร์ย่อยด้วย os.walk
 csv_file_paths = []
@@ -30,6 +23,7 @@ for root, dirs, files in os.walk(base_dir):
     for file in files:
         if file.endswith('.csv'):
             csv_file_paths.append(os.path.join(root, file))
+csv_file_paths.sort()  # ให้ลำดับ (และ id ของเอกสาร) เหมือนกันทุกเครื่อง
 
 if len(csv_file_paths) == 0:
     print("❌ ไม่พบไฟล์ .csv ในโฟลเดอร์นี้หรือโฟลเดอร์ย่อยเลย")
@@ -50,18 +44,22 @@ else:
                 level = 'อำเภอ' if '_อำเภอ' in name_no_ext else 'จังหวัด'
                 clean_name = name_no_ext.replace('_อำเภอ', '')
                 
-                # หาชื่อพืช
-                crop = "ไม่ระบุ"
-                for c in KNOWN_CROPS:
-                    if c in clean_name:
-                        crop = c
-                        break
-                        
-                # หาชื่อจังหวัด
-                prov = "ไม่ระบุ"
-                parts = clean_name.split('_')
-                if len(parts) >= 2:
-                    prov = parts[1]
+                path_parts = os.path.normpath(file_path).split(os.sep)
+
+                # หาชื่อพืช: ยึดจากชื่อไฟล์ก่อน (มีไฟล์ที่วางผิดโฟลเดอร์พืช)
+                # ถ้าชื่อไฟล์ไม่บอก ค่อยดูจากชื่อโฟลเดอร์
+                # (ชื่อไฟล์บางไฟล์สะกด "อราบิก้า" → normalize_thai แก้ให้)
+                crop_name_src = normalize_thai(clean_name)
+                crop = next((c for c in CROP_NAMES_LONGEST_FIRST if c in crop_name_src), None)
+                if crop is None:
+                    crop = next((p for p in path_parts if p in CROP_NAMES), "ไม่ระบุ")
+
+                # หาชื่อจังหวัด: ยึดจากชื่อโฟลเดอร์ เพราะชื่อไฟล์บางไฟล์ไม่มีจังหวัด
+                # หรือใช้ตัวคั่นต่างกัน (_ / -)
+                prov = next((p for p in path_parts if p in ALL_PROVINCES), None)
+                if prov is None:
+                    parts = clean_name.split('_')
+                    prov = parts[1] if len(parts) >= 2 else "ไม่ระบุ"
 
                 df['ชนิดพืช'] = crop
                 df['จังหวัด'] = prov

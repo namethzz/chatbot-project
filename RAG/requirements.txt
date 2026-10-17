@@ -1,0 +1,10 @@
+# RAG API (rag_prototype.py)
+fastapi
+uvicorn
+pydantic
+requests
+chromadb
+sentence-transformers
+
+# เตรียมข้อมูล (dataset_local.py)
+pandas
