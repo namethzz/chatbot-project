@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import re
 import json
 import pandas as pd
 from constants import CROP_NAMES, CROP_NAMES_LONGEST_FIRST, ALL_PROVINCES, normalize_thai
@@ -41,7 +42,6 @@ else:
                 
                 # --- ดึงข้อมูลจากชื่อไฟล์ ---
                 name_no_ext = filename.replace('.csv', '')
-                level = 'อำเภอ' if '_อำเภอ' in name_no_ext else 'จังหวัด'
                 clean_name = name_no_ext.replace('_อำเภอ', '')
                 
                 path_parts = os.path.normpath(file_path).split(os.sep)
@@ -54,16 +54,16 @@ else:
                 if crop is None:
                     crop = next((p for p in path_parts if p in CROP_NAMES), "ไม่ระบุ")
 
-                # หาชื่อจังหวัด: ยึดจากชื่อโฟลเดอร์ เพราะชื่อไฟล์บางไฟล์ไม่มีจังหวัด
-                # หรือใช้ตัวคั่นต่างกัน (_ / -)
-                prov = next((p for p in path_parts if p in ALL_PROVINCES), None)
+                # หาชื่อจังหวัด: ยึดจากชื่อไฟล์ก่อน (มีไฟล์ที่วางผิดโฟลเดอร์จังหวัด เช่น
+                # ไฟล์ยโสธรอยู่ในโฟลเดอร์มุกดาหาร) ชื่อไฟล์ใช้ตัวคั่นได้ทั้ง _ และ -
+                # ถ้าชื่อไฟล์ไม่มีจังหวัด ค่อยดูจากชื่อโฟลเดอร์
+                name_parts = re.split(r'[_-]', clean_name)
+                prov = next((p for p in name_parts if p in ALL_PROVINCES), None)
                 if prov is None:
-                    parts = clean_name.split('_')
-                    prov = parts[1] if len(parts) >= 2 else "ไม่ระบุ"
+                    prov = next((p for p in path_parts if p in ALL_PROVINCES), "ไม่ระบุ")
 
                 df['ชนิดพืช'] = crop
                 df['จังหวัด'] = prov
-                df['ระดับข้อมูล'] = level
                 
                 # --- ปรับมาตรฐานคอลัมน์ ---
                 if 'เนื้อที่ (ไร่)' in df.columns:
@@ -77,9 +77,14 @@ else:
                 
                 df = df.dropna(subset=['พื้นที่ (ไร่)'])
                 df = df[df['ขอบเขต'] != 'แหล่งข้อมูล']
-                
+
+                # ระดับข้อมูลดูจากแต่ละแถว ไม่ใช่ชื่อไฟล์ — ไฟล์รายอำเภอหลายไฟล์ไม่มี
+                # "_อำเภอ" ในชื่อ และไฟล์รายอำเภอบางไฟล์มีแถวรวมทั้งจังหวัดปนอยู่
+                df['ขอบเขต'] = df['ขอบเขต'].astype(str).str.strip()
+                df['ระดับข้อมูล'] = (df['ขอบเขต'] == prov).map({True: 'จังหวัด', False: 'อำเภอ'})
+
                 all_data.append(df)
-                print(f"  ✅ อ่านสำเร็จ: {filename} -> พืช: {crop}, จังหวัด: {prov}, ระดับ: {level}")
+                print(f"  ✅ อ่านสำเร็จ: {filename} -> พืช: {crop}, จังหวัด: {prov}")
                 
             except Exception as e:
                 print(f"  ❌ ผิดพลาดที่ไฟล์ {filename}: {e}")
@@ -101,7 +106,12 @@ if all_data:
         level = row['ระดับข้อมูล']
         
         if level == 'อำเภอ':
-            loc_name = boundary.replace('อ.', 'อำเภอ') if boundary.startswith('อ.') else f"อำเภอ{boundary}"
+            if boundary.startswith('อ.'):
+                loc_name = boundary.replace('อ.', 'อำเภอ', 1)
+            elif boundary.startswith(('เขต', 'ต.')):  # เช่น เขตการปกครองพิเศษพัทยา
+                loc_name = boundary
+            else:
+                loc_name = f"อำเภอ{boundary}"
             loc_str = f"{loc_name} จังหวัด{prov}"
             doc_id = f"land_{crop}_{prov}_{boundary}_{idx}"
             amphoe_meta = boundary

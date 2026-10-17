@@ -7,12 +7,15 @@ import { Session, DailyStat } from './models.js'
 const app  = express()
 const PORT = process.env.PORT || 4000
 
-app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:3000'] }))
+// CORS_ORIGINS = URL ของ frontend คั่นด้วย , (เช่น https://xxx.vercel.app)
+const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:3000')
+  .split(',').map(o => o.trim().replace(/\/$/, '')).filter(Boolean)
+app.use(cors({ origin: corsOrigins }))
 app.use(express.json())
 
 // ─── MongoDB ──────────────────────────────────────────────
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ MongoDB connected →', process.env.MONGODB_URI))
+  .then(() => console.log('✅ MongoDB connected'))  // ไม่ log URI เพราะมีรหัสผ่านของ Atlas อยู่
   .catch(err => { console.error('❌ MongoDB error:', err.message); process.exit(1) })
 
 // ─── Helper: bump daily stats ─────────────────────────────
@@ -26,13 +29,16 @@ async function bumpStats(intent, cropName) {
 
 // ─── Helper: call RAG Python backend ─────────────────────
 async function callRAG(question) {
-  // ยัง placeholder — เชื่อม Qwen2 ทีหลัง
   try {
     const res = await fetch(process.env.RAG_API_URL, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(process.env.RAG_API_KEY && { 'X-API-Key': process.env.RAG_API_KEY }),
+      },
       body:    JSON.stringify({ question }),
-      signal:  AbortSignal.timeout(90_000),
+      // นานหน่อยเผื่อ Hugging Face Space กำลังตื่นจากการหลับ
+      signal:  AbortSignal.timeout(120_000),
     })
     if (!res.ok) throw new Error('RAG ' + res.status)
     const data = await res.json()
@@ -43,7 +49,7 @@ async function callRAG(question) {
     // RAG ยังไม่พร้อม / error → return placeholder
     console.error('⚠️ RAG error:', err.message)
     return {
-      answer:    '🔧 ระบบ RAG กำลังพัฒนาอยู่ครับ — กรุณารอสักครู่',
+      answer:    '🔧 ระบบตอบคำถามยังไม่พร้อม (อาจกำลังเริ่มทำงาน ใช้เวลา 1–2 นาที) — กรุณาลองถามใหม่อีกครั้งครับ',
       intent:    'pending',
       crop_name: null,
       province:  null,

@@ -1,31 +1,29 @@
 # -*- coding: utf-8 -*-
 import os
-import json
 import re
-import chromadb
-from sentence_transformers import SentenceTransformer
-import requests  
-from fastapi import FastAPI
+import secrets
+import requests
+from fastapi import FastAPI, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import uvicorn
 from constants import CROP_NAMES, CROP_NAMES_LONGEST_FIRST, normalize_thai, find_province
+from vector_db import embed_model, get_collection, rebuild_db
 
 # ==========================================
-# ⚙️ SECTION 1: SETUP PATH & APP
+# ⚙️ SECTION 1: SETUP
 # ==========================================
 
-# อิงตำแหน่งของไฟล์นี้ — รันจากโฟลเดอร์ไหนก็ได้
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR   = os.path.join(SCRIPT_DIR, 'data', 'cleaned')
-DB_DIR     = os.path.join(SCRIPT_DIR, 'chroma_db')
+# LLM ที่ใช้ API แบบเดียวกับ OpenAI (/chat/completions) — ค่าเริ่มต้นคือ Typhoon
+# อยากใช้ Ollama ในเครื่อง: LLM_BASE_URL=http://localhost:11434/v1 LLM_MODEL=qwen2.5:7b
+LLM_BASE_URL = os.getenv('LLM_BASE_URL', 'https://api.opentyphoon.ai/v1').rstrip('/')
+LLM_MODEL    = os.getenv('LLM_MODEL', 'typhoon-v2.5-30b-a3b-instruct')
+LLM_API_KEY  = os.getenv('LLM_API_KEY', '')
 
-OLLAMA_URL   = os.getenv('OLLAMA_URL', 'http://localhost:11434/api/generate')
-OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'qwen2.5:7b')
-
-os.makedirs(DATA_DIR, exist_ok=True)
-os.makedirs(DB_DIR, exist_ok=True)
+# ถ้าตั้งไว้ /ask จะรับเฉพาะ request ที่ส่ง header X-API-Key ตรงกัน
+# (กันคนอื่นยิง API ตรงๆ จนโควตา LLM หมด)
+RAG_API_KEY = os.getenv('RAG_API_KEY', '')
 
 app = FastAPI()
 
@@ -38,67 +36,11 @@ app.add_middleware(
 )
 
 # ==========================================
-# 📦 SECTION 2: VECTOR DB & EMBEDDING
+# 📦 SECTION 2: VECTOR DB (อยู่ใน vector_db.py)
 # ==========================================
 
-print('กำลังโหลด Embedding model (BAAI/bge-m3)...')
-embed_model = SentenceTransformer('BAAI/bge-m3')
-
-chroma_client = chromadb.PersistentClient(path=DB_DIR)
-COLLECTION_NAME = "agri_knowledge_v2"
-collection = chroma_client.get_or_create_collection(name=COLLECTION_NAME)
-
-BATCH_SIZE = 2000 
-
-def load_jsonl_to_chroma(jsonl_path, data_type_override=None):
-    if not os.path.exists(jsonl_path):
-        print(f"⚠️ ไม่พบไฟล์ {jsonl_path} ข้ามการโหลด...")
-        return
-        
-    with open(jsonl_path, encoding='utf-8') as f:
-        docs = [json.loads(line) for line in f]
-
-    total = len(docs)
-    print(f'กำลังโหลด {total} docs จาก {os.path.basename(jsonl_path)}')
-
-    for start in range(0, total, BATCH_SIZE):
-        batch = docs[start:start + BATCH_SIZE]
-        ids       = [str(d['id']) for d in batch]
-        
-        texts     = [normalize_thai(d['text']) for d in batch]
-        metadatas = []
-
-        for d in batch:
-            meta = {k: normalize_thai(str(v)) for k, v in d['metadata'].items()}
-            if data_type_override:
-                meta['data_type'] = data_type_override
-            metadatas.append(meta)
-
-        embeddings = embed_model.encode(texts, show_progress_bar=True).tolist()
-
-        collection.upsert(
-            ids=ids, documents=texts, metadatas=metadatas, embeddings=embeddings
-        )
-    print(f'✅ โหลดเสร็จสิ้น\n')
-
-DATA_FILES = [
-    ('land_suit_rag_full.jsonl',      'land_suitability'),
-    ('plant_growing_rag_ready.jsonl', 'growing_guide'),
-    ('pest_rag.jsonl',                'pest_info'),
-]
-
-def rebuild_db():
-    """ลบ collection เดิมแล้วโหลดข้อมูลทั้งหมดใหม่ (กันเอกสารเก่าที่ id ไม่ตรงค้างอยู่)"""
-    global collection
-    chroma_client.delete_collection(COLLECTION_NAME)
-    collection = chroma_client.get_or_create_collection(name=COLLECTION_NAME)
-    for filename, data_type in DATA_FILES:
-        load_jsonl_to_chroma(os.path.join(DATA_DIR, filename), data_type_override=data_type)
-
-# ---------------------------------------------------------
-# 💡 สร้าง/โหลดข้อมูลใหม่: รันด้วย REBUILD_DB=1 python rag_prototype.py
-# ---------------------------------------------------------
-if os.getenv('REBUILD_DB') == '1' or collection.count() == 0:
+# 💡 สร้าง/โหลดข้อมูลใหม่: python build_db.py (หรือรันด้วย REBUILD_DB=1)
+if os.getenv('REBUILD_DB') == '1' or get_collection().count() == 0:
     rebuild_db()
 
 # ==========================================
@@ -207,9 +149,10 @@ def retrieve(question: str, n_results: int = 5) -> dict:
     intent = intent_info['intent']
     dtypes = intent_info['data_types']
 
+    collection = get_collection()
     total = collection.count()
     if total == 0:
-        print('⚠️ Vector DB ว่าง — รันด้วย REBUILD_DB=1 เพื่อโหลดข้อมูล')
+        print('⚠️ Vector DB ว่าง — รัน python build_db.py เพื่อโหลดข้อมูล')
         return {'intent_info': intent_info, 'docs': [], 'metadatas': []}
 
     # 1. บังคับหาชนิดพืช ("กาแฟ" เฉยๆ = ได้ทั้งโรบัสต้าและอาราบิก้า)
@@ -255,7 +198,7 @@ def retrieve(question: str, n_results: int = 5) -> dict:
     return {'intent_info': intent_info, 'docs': docs, 'metadatas': metas}
 
 # ==========================================
-# 🤖 SECTION 4: GENERATOR (OLLAMA API)
+# 🤖 SECTION 4: GENERATOR (LLM API)
 # ==========================================
 
 SYSTEM_PROMPT = """คุณคือ "พี่เกษตร" ผู้ช่วย AI ผู้เชี่ยวชาญด้านการเกษตรของประเทศไทย คอยให้คำปรึกษาและตอบคำถามเกี่ยวกับพืชเศรษฐกิจ 14 ชนิด
@@ -276,6 +219,23 @@ SYSTEM_PROMPT = """คุณคือ "พี่เกษตร" ผู้ช่
 9. หากผู้ใช้ถามคำถามที่ไม่เกี่ยวข้องกับการเกษตรหรืออยู่นอกเหนือขอบเขตของข้อมูลอ้างอิง ให้ตอบว่า "ขออภัยครับ พี่เกษตรเชี่ยวชาญเฉพาะเรื่องการเกษตรเท่านั้นนะครับ ถ้ามีคำถามเกี่ยวกับการเกษตรยินดีให้คำปรึกษาเต็มที่เลยครับ" และไม่ต้องเชื่อมโยงข้อมูลอ้างอิงใดๆ ในการตอบคำถามเหล่านั้น
 """
 
+OFF_TOPIC_FALLBACK = "ขออภัยครับ พี่เกษตรเชี่ยวชาญเฉพาะด้านการเกษตรนะครับ ลองถามเรื่องพืช ดิน หรือศัตรูพืชได้เลยครับ 🌾"
+
+def call_llm(system: str, prompt: str, temperature: float, timeout: int) -> str:
+    """เรียก LLM ผ่าน /chat/completions — โยน exception ถ้าเรียกไม่สำเร็จ"""
+    headers = {'Authorization': f'Bearer {LLM_API_KEY}'} if LLM_API_KEY else {}
+    response = requests.post(f'{LLM_BASE_URL}/chat/completions', headers=headers, json={
+        "model": LLM_MODEL,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user",   "content": prompt},
+        ],
+        "temperature": temperature,
+        "max_tokens": 1024,
+    }, timeout=timeout)
+    response.raise_for_status()
+    return response.json()['choices'][0]['message']['content'].strip()
+
 def generate_answer(question: str, context_docs: list, temperature: float = 0.3) -> str:
     context_text = ''
     for i, doc in enumerate(context_docs, 1):
@@ -284,42 +244,24 @@ def generate_answer(question: str, context_docs: list, temperature: float = 0.3)
     prompt = f"ข้อมูลอ้างอิง:\n{context_text}\nคำถาม: {question}"
 
     try:
-        response = requests.post(OLLAMA_URL, json={
-            "model": OLLAMA_MODEL,
-            "system": SYSTEM_PROMPT,
-            "prompt": prompt,
-            "stream": False,
-            "options": {"temperature": temperature}
-        }, timeout=120)
-        
-        if response.status_code == 200:
-            return response.json()['response'].strip()
-        else:
-            return f"❌ เกิดข้อผิดพลาดจาก Ollama: {response.status_code}"
-            
+        return call_llm(SYSTEM_PROMPT, prompt, temperature, timeout=120)
     except requests.exceptions.Timeout:
-        # ดักจับกรณีที่ Ollama ตอบกลับช้ากว่าเวลาที่กำหนด
+        # ดักจับกรณีที่ LLM ตอบกลับช้ากว่าเวลาที่กำหนด
         return "❌ ขออภัยครับ พี่เกษตรประมวลผลนานเกินไป (Timeout) กรุณาลองถามใหม่อีกครั้งนะครับ"
+    except requests.exceptions.HTTPError as e:
+        print(f'❌ LLM API error: {e.response.status_code} {e.response.text[:300]}')
+        if e.response.status_code == 429:
+            return "❌ ขออภัยครับ ตอนนี้มีคนถามเยอะเกินโควตา กรุณารอสักครู่แล้วลองใหม่นะครับ"
+        return f"❌ เกิดข้อผิดพลาดจาก LLM API: {e.response.status_code}"
     except requests.exceptions.ConnectionError:
-        return "❌ ไม่สามารถเชื่อมต่อ Ollama ได้ กรุณาเปิดโปรแกรม Ollama ให้เรียบร้อย"
+        return "❌ ไม่สามารถเชื่อมต่อ LLM API ได้ กรุณาลองใหม่อีกครั้งนะครับ"
 
 def generate_off_topic_answer(question: str) -> str:
     try:
-        response = requests.post(OLLAMA_URL, json={
-            "model": OLLAMA_MODEL,
-            "system": OFF_TOPIC_SYSTEM_PROMPT,
-            "prompt": f"คำถามของผู้ใช้: {question}",
-            "stream": False,
-            "options": {"temperature": 0.7}  # ให้ยืดหยุ่นกว่า RAG ปกติ
-        }, timeout=60)
-
-        if response.status_code == 200:
-            return response.json()['response'].strip()
-        else:
-            return "ขออภัยครับ พี่เกษตรเชี่ยวชาญเฉพาะด้านการเกษตรนะครับ ลองถามเรื่องพืช ดิน หรือศัตรูพืชได้เลยครับ 🌾"
-
+        # temperature สูงกว่า RAG ปกติ ให้ตอบยืดหยุ่นกว่า
+        return call_llm(OFF_TOPIC_SYSTEM_PROMPT, f"คำถามของผู้ใช้: {question}", 0.7, timeout=60)
     except Exception:
-        return "ขออภัยครับ พี่เกษตรเชี่ยวชาญเฉพาะด้านการเกษตรนะครับ ลองถามเรื่องพืช ดิน หรือศัตรูพืชได้เลยครับ 🌾"
+        return OFF_TOPIC_FALLBACK
 
 class QueryRequest(BaseModel):
     question: str
@@ -331,7 +273,9 @@ async def root_hello():
 # ใช้ def ธรรมดา (ไม่ใช่ async) เพราะข้างในมีงานที่บล็อก (encode / requests)
 # FastAPI จะรันใน threadpool ให้ — ไม่งั้นทุก request ต้องต่อคิวกัน
 @app.post("/ask")
-def api_ask(req: QueryRequest):
+def api_ask(req: QueryRequest, x_api_key: str = Header(default='')):
+    if RAG_API_KEY and not secrets.compare_digest(x_api_key, RAG_API_KEY):
+        return JSONResponse(status_code=401, content={"error": "invalid API key"})
     try:
         # 🚦 ตรวจสอบว่าคำถามเกี่ยวกับเกษตรไหม — ถ้าไม่ใช่ ปฏิเสธทันทีโดยไม่เรียก LLM
         if not is_agriculture_related(req.question):
@@ -370,7 +314,7 @@ def api_ask(req: QueryRequest):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 if __name__ == '__main__':
-    # รันที่ 0.0.0.0 เพื่อให้เพื่อนยิงผ่าน ngrok หรือ cloudflared ได้
+    # รันที่ 0.0.0.0 เพื่อให้เข้าจากนอกเครื่องได้ (Hugging Face Spaces ตั้ง PORT=7860)
     # ส่ง app ตรงๆ (ไม่ใช้ reload) — ไม่งั้นโมเดล embedding จะถูกโหลดซ้ำ 2 รอบ
     # ถ้าอยากได้ auto-reload ตอนแก้โค้ด: uvicorn rag_prototype:app --reload
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv('PORT', '8000')))

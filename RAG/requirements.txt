@@ -3,7 +3,8 @@ fastapi
 uvicorn
 pydantic
 requests
-chromadb
+# ล็อกเวอร์ชันไว้ — chroma_db ที่สร้างใน GitHub Actions ต้องเปิดได้ด้วยเวอร์ชันเดียวกันบน Hugging Face Spaces
+chromadb==1.5.9
 sentence-transformers
 
 # เตรียมข้อมูล (dataset_local.py)
