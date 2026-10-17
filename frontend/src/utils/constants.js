@@ -1,19 +1,19 @@
 // ─── 14 พืชเศรษฐกิจไทย ────────────────────────────────
 export const CROPS = [
-  { key: 'ข้าว', label: 'ข้าว', icon: 'rice' },
-  { key: 'ข้าวโพด', label: 'ข้าวโพด', icon: 'corn' },
-  { key: 'มันสำปะหลัง', label: 'มันสำปะหลัง', icon: 'cassava' },
-  { key: 'อ้อย', label: 'อ้อย', icon: 'sugarcane' },
-  { key: 'สับปะรด', label: 'สับปะรด', icon: 'pineapple' },
-  { key: 'ยางพารา', label: 'ยางพารา', icon: 'rubber' },
-  { key: 'ทุเรียน', label: 'ทุเรียน', icon: 'durian' },
-  { key: 'มังคุด', label: 'มังคุด', icon: 'mangosteen' },
-  { key: 'ลำไย', label: 'ลำไย', icon: 'longan' },
-  { key: 'ปาล์มน้ำมัน', label: 'ปาล์มน้ำมัน', icon: 'palm' },
-  { key: 'มะพร้าว', label: 'มะพร้าว', icon: 'coconut' },
-  { key: 'กาแฟโรบัสต้า', label: 'กาแฟโรบัสต้า', icon: 'coffee' },
-  { key: 'กาแฟอาราบิก้า', label: 'กาแฟอาราบิก้า', icon: 'coffee' },
-  { key: 'เงาะ', label: 'เงาะ', icon: 'rambutan' },
+  { key: 'ข้าว', label: 'ข้าว' },
+  { key: 'ข้าวโพด', label: 'ข้าวโพด' },
+  { key: 'มันสำปะหลัง', label: 'มันสำปะหลัง' },
+  { key: 'อ้อย', label: 'อ้อย' },
+  { key: 'สับปะรด', label: 'สับปะรด' },
+  { key: 'ยางพารา', label: 'ยางพารา' },
+  { key: 'ทุเรียน', label: 'ทุเรียน' },
+  { key: 'มังคุด', label: 'มังคุด' },
+  { key: 'ลำไย', label: 'ลำไย' },
+  { key: 'ปาล์มน้ำมัน', label: 'ปาล์มน้ำมัน' },
+  { key: 'มะพร้าว', label: 'มะพร้าว' },
+  { key: 'กาแฟโรบัสต้า', label: 'กาแฟโรบัสต้า' },
+  { key: 'กาแฟอาราบิก้า', label: 'กาแฟอาราบิก้า' },
+  { key: 'เงาะ', label: 'เงาะ' },
 ]
 
 // ─── คำถามตัวอย่าง (หน้าแรก + หน้าแชทว่าง) ─────────────

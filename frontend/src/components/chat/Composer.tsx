@@ -1,8 +1,7 @@
 import * as React from "react";
-import { ArrowUp, LoaderCircle } from "lucide-react";
+import { ArrowUp, ChevronDown, LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CROPS, HINT_TAGS } from "@/utils/constants.js";
-import { CropIcons } from "../CropIcons.jsx";
 import { FallbackIcon, KIND_ICON } from "./meta";
 
 interface ComposerProps {
@@ -40,28 +39,6 @@ export default function Composer({ onSend, loading }: ComposerProps) {
   return (
     <div className="shrink-0 border-t border-lime/10 bg-field-950/90 backdrop-blur">
       <div className="mx-auto w-full max-w-3xl px-4 pb-4 pt-3 sm:px-6">
-        {/* พืช — กดเพื่อใส่ชื่อพืชในคำถาม */}
-        <div
-          className="-mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [mask-image:linear-gradient(to_right,black_92%,transparent)]"
-          role="group"
-          aria-label="ใส่ชื่อพืชในคำถาม"
-        >
-          {CROPS.map((c: { key: string; label: string; icon: string }) => {
-            const CropIcon = (CropIcons as Record<string, () => React.ReactNode>)[c.icon];
-            return (
-              <button
-                key={c.key}
-                type="button"
-                onClick={() => insert(c.key)}
-                className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-lime/10 bg-field-900 py-1 pl-1.5 pr-3 text-sm text-moss transition-colors hover:border-lime/30 hover:text-cream focus-visible:outline-2 focus-visible:outline-lime"
-              >
-                <span className="grid size-6 place-items-center rounded-full bg-cream/90">{CropIcon?.()}</span>
-                {c.label}
-              </button>
-            );
-          })}
-        </div>
-
         <form
           onSubmit={(e) => { e.preventDefault(); submit(); }}
           className="flex items-end gap-2 rounded-2xl border border-lime/15 bg-field-800 p-2 pl-4 transition-colors focus-within:border-lime/50"
@@ -97,6 +74,8 @@ export default function Composer({ onSend, loading }: ComposerProps) {
         </form>
 
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+          <CropPicker onPick={insert} />
+          <span className="mx-1 h-4 w-px bg-lime/15" aria-hidden />
           {HINT_TAGS.map((h: { kind: string; label: string; insert: string }) => {
             const Icon = KIND_ICON[h.kind] ?? FallbackIcon;
             return (
@@ -119,6 +98,69 @@ export default function Composer({ onSend, loading }: ComposerProps) {
           </span>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── เลือกพืช: ปุ่มเดียว เปิดรายชื่อพืชขึ้นมาเหนือช่องพิมพ์ ─────────────
+function CropPicker({ onPick }: { onPick: (crop: string) => void }) {
+  const [open, setOpen] = React.useState(false);
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const listId = React.useId();
+
+  React.useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    rootRef.current?.querySelector<HTMLButtonElement>("[data-crop]")?.focus();
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls={listId}
+        className={cn(
+          "inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-lime",
+          open ? "bg-field-800 text-cream" : "text-lime hover:bg-field-800",
+        )}
+      >
+        เลือกพืช
+        <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} aria-hidden />
+      </button>
+
+      {open && (
+        <div
+          id={listId}
+          role="group"
+          aria-label="ใส่ชื่อพืชในคำถาม"
+          className="absolute bottom-full left-0 z-20 mb-2 grid w-[min(88vw,22rem)] grid-cols-2 gap-0.5 rounded-xl border border-lime/15 bg-field-900 p-1.5 shadow-[0_18px_40px_-8px_rgba(0,0,0,.6)] animate-[fadeUp_.18s_ease-out] sm:grid-cols-3"
+        >
+          {CROPS.map((c: { key: string; label: string }) => (
+            <button
+              key={c.key}
+              type="button"
+              data-crop
+              onClick={() => { onPick(c.key); setOpen(false); }}
+              className="cursor-pointer rounded-lg px-2.5 py-2 text-left text-sm text-moss transition-colors hover:bg-field-800 hover:text-cream focus-visible:bg-field-800 focus-visible:text-cream focus-visible:outline-none"
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
