@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 
 export interface Hero1Props {
   brand: string;
+  /** โลโก้หน้าชื่อแบรนด์ (ถ้าไม่ใส่ใช้ไอคอน Sprout) */
+  logo?: React.ReactNode;
   ctaLabel: string;
   onCtaClick?: () => void;
   headline: React.ReactNode;
@@ -32,6 +34,7 @@ const BEAM_GROUPS = [
 
 const Hero1 = ({
   brand,
+  logo,
   ctaLabel,
   onCtaClick,
   headline,
@@ -87,9 +90,11 @@ const Hero1 = ({
       {/* Header */}
       <header className="flex items-center justify-between p-6">
         <div className="flex items-center gap-2.5">
-          <span className="grid size-8 place-items-center rounded-lg bg-leaf shadow-[0_6px_18px_rgba(0,0,0,.35)]">
-            <Sprout className="size-[18px] text-cream" strokeWidth={2.2} aria-hidden />
-          </span>
+          {logo ?? (
+            <span className="grid size-8 place-items-center rounded-lg bg-leaf shadow-[0_6px_18px_rgba(0,0,0,.35)]">
+              <Sprout className="size-[18px] text-cream" strokeWidth={2.2} aria-hidden />
+            </span>
+          )}
           <span className="text-lg font-bold tracking-tight">{brand}</span>
         </div>
         <button

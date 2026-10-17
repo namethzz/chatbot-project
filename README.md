@@ -1,3 +1,5 @@
+<img src="docs/logo.png" alt="โลโก้ที่ปรึกษาเกษตรกร" width="120">
+
 # Economic Crops Chat — พี่เกษตร 
 
 แชทบอทภาษาไทยที่ตอบคำถามเรื่องการปลูกพืชเศรษฐกิจไทย 14 ชนิด โดยค้นจากข้อมูลจริงของหน่วยงานรัฐก่อนแล้วจึงให้ AI เรียบเรียงคำตอบ (RAG — Retrieval-Augmented Generation)
@@ -56,7 +58,7 @@
 | `RAG/rag_prototype.py` | API `/ask`: กรองหัวข้อ → แยกเจตนา → ค้นข้อมูล → ให้ LLM ตอบ |
 | `RAG/constants.py` | รายชื่อพืช/จังหวัด และตัวช่วย normalize ภาษาไทย |
 | `backend/` | API เก็บประวัติแชทและสถิติ และส่งคำถามต่อให้ RAG |
-| `frontend/` | หน้าแรก (`src/components/Landing.tsx` + `src/components/ui/hero-1.tsx`) และหน้าแชท (มีโหมดเดโมในตัว ดู `src/utils/demoApi.js`) |
+| `frontend/` | หน้าแรก (`src/components/Landing.tsx` + `src/components/ui/hero-1.tsx`) และหน้าแชท (`src/components/chat/`) — มีโหมดเดโมในตัว ดู `src/utils/demoApi.js` |
 
 ---
 
