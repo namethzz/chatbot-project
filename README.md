@@ -2,7 +2,7 @@
 
 แชทบอทภาษาไทยที่ตอบคำถามเรื่องการปลูกพืชเศรษฐกิจไทย 14 ชนิด โดยค้นจากข้อมูลจริงของหน่วยงานรัฐก่อนแล้วจึงให้ AI เรียบเรียงคำตอบ (RAG — Retrieval-Augmented Generation)
 
-**🔗 Live demo:** _ใส่ลิงก์ Vercel ที่นี่_
+**🔗 Live demo:** _chatbot-project-phi-nine.vercel.app_
 
 ![หน้าแรก](docs/screenshot-welcome.png)
 ![ตัวอย่างการสนทนา](docs/screenshot-chat.png)
