@@ -35,9 +35,13 @@ async function callRAG(question) {
       signal:  AbortSignal.timeout(90_000),
     })
     if (!res.ok) throw new Error('RAG ' + res.status)
-    return res.json()
-  } catch {
-    // RAG ยังไม่พร้อม → return placeholder
+    const data = await res.json()
+    // กัน RAG ตอบกลับมาแบบไม่มี answer (เช่น { error }) → ไม่งั้น save ไม่ผ่านเพราะ content required
+    if (typeof data?.answer !== 'string' || !data.answer.trim()) throw new Error('RAG response has no answer')
+    return data
+  } catch (err) {
+    // RAG ยังไม่พร้อม / error → return placeholder
+    console.error('⚠️ RAG error:', err.message)
     return {
       answer:    '🔧 ระบบ RAG กำลังพัฒนาอยู่ครับ — กรุณารอสักครู่',
       intent:    'pending',
@@ -112,46 +116,52 @@ app.delete('/api/sessions/:id', async (req, res) => {
 // POST /api/ask  { question, sessionId? }
 app.post('/api/ask', async (req, res) => {
   const { question, sessionId } = req.body
-  if (!question?.trim()) return res.status(400).json({ error: 'question required' })
+  if (typeof question !== 'string' || !question.trim()) return res.status(400).json({ error: 'question required' })
 
-  const t0 = Date.now()
+  // Express 4 ไม่จับ error ของ async handler ให้ → ต้อง try/catch เอง ไม่งั้น process ล่มทั้งตัว
+  try {
+    const t0 = Date.now()
 
-  // หา session หรือสร้างใหม่
-  let session = sessionId ? await Session.findById(sessionId).catch(() => null) : null
-  if (!session) session = new Session({})
+    // หา session หรือสร้างใหม่
+    let session = sessionId ? await Session.findById(sessionId).catch(() => null) : null
+    if (!session) session = new Session({})
 
-  // push user message ก่อน
-  session.messages.push({ role: 'user', content: question.trim() })
+    // push user message ก่อน
+    session.messages.push({ role: 'user', content: question.trim() })
 
-  // call RAG
-  const rag     = await callRAG(question.trim())
-  const latency = Date.now() - t0
+    // call RAG
+    const rag     = await callRAG(question.trim())
+    const latency = Date.now() - t0
 
-  // push bot message
-  const botMsg = {
-    role:      'bot',
-    content:   rag.answer,
-    intent:    rag.intent    || 'pending',
-    sources:   rag.sources   || [],
-    cropName:  rag.crop_name || null,
-    province:  rag.province  || null,
-    highlight: rag.highlight || null,
-    docsUsed:  rag.docs_used || 0,
-    latencyMs: latency,
+    // push bot message
+    const botMsg = {
+      role:      'bot',
+      content:   rag.answer,
+      intent:    rag.intent    || 'pending',
+      sources:   rag.sources   || [],
+      cropName:  rag.crop_name || null,
+      province:  rag.province  || null,
+      highlight: rag.highlight || null,
+      docsUsed:  rag.docs_used || 0,
+      latencyMs: latency,
+    }
+    session.messages.push(botMsg)
+
+    if (rag.crop_name) session.cropFocus = rag.crop_name
+    await session.save()
+
+    // fire-and-forget stats
+    bumpStats(rag.intent, rag.crop_name)
+
+    res.json({
+      sessionId:  session._id,
+      userMsg:    session.messages[session.messages.length - 2],
+      botMsg:     session.messages[session.messages.length - 1],
+    })
+  } catch (e) {
+    console.error('❌ /api/ask error:', e.message)
+    res.status(500).json({ error: e.message })
   }
-  session.messages.push(botMsg)
-
-  if (rag.crop_name) session.cropFocus = rag.crop_name
-  await session.save()
-
-  // fire-and-forget stats
-  bumpStats(rag.intent, rag.crop_name)
-
-  res.json({
-    sessionId:  session._id,
-    userMsg:    session.messages[session.messages.length - 2],
-    botMsg:     session.messages[session.messages.length - 1],
-  })
 })
 
 // ═══════════════════════════════════════════════
