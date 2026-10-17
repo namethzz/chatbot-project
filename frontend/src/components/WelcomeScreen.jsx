@@ -29,7 +29,7 @@ export default function WelcomeScreen({ onQuick }) {
       </div>
 
       <h1 style={{
-        fontFamily: "'Libre Baskerville', serif",
+        fontFamily: "'Libre Baskerville', 'Sarabun', serif",
         fontSize: 34,
         fontWeight: 700,
         color: 'var(--soil)',

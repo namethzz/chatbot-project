@@ -33,7 +33,7 @@ export default function Header({ backendOk, docsCount = 46340 }) {
 
         <div>
           <div style={{
-            fontFamily: "'Libre Baskerville', serif",
+            fontFamily: "'Libre Baskerville', 'Sarabun', serif",
             fontSize: 20,
             fontWeight: 700,
             color: 'var(--soil)',
